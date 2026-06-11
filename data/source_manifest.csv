@@ -1,0 +1,3 @@
+﻿source_id,record_family,auction_year,document_title,document_date,court_case_number,sale_date,reoffer_date,source_url,local_filename,file_format,page_count,machine_readable_flag,retrieval_date,coverage_notes,quality_notes,commercial_use_warning_flag,active_flag
+return-sale-2019,return_of_sale,2019,2019 Return of Sale,,,,,,2019 Return of Sale.pdf,pdf,7,False,,Successful auction sales and purchasers,Scanned exhibit; visually transcribed,True,True
+return-sale-2025,return_of_sale,2025,2025 Return of Sale,,25-2-04495-31,2025-12-03,2026-01-02,,25-2-04495-31_2025 RETURN OF SALE-EXH A.pdf,pdf,1,True,,Successful auction sales and purchasers,Machine-readable exhibit,True,True

@@ -1,0 +1,95 @@
+buyer_name,purchase_count,first_purchase_year,most_recent_purchase_year,auction_year_count,total_winning_bids,median_winning_bid,average_bid_multiple,county_acquisition_count,repeat_buyer_flag
+Snohomish County,6,2019,2022,3,17291.57,2405.34,1.0,6,True
+"Home-Plus, LLC",5,2019,2019,1,167301.0,30300.0,8.5627,0,True
+Salwan Hassan,4,2025,2025,1,110946.0,33150.0,8.2418,0,True
+Kylee M. Wear & Lester L. Wear,3,2021,2021,1,33801.0,13100.0,5.0792,0,True
+Nichole Leigh,3,2019,2019,1,4849.0,1522.0,1.0,0,True
+Silver Moon LLC,2,2025,2025,1,610701.0,305350.5,9.4498,0,True
+Venkata S. M. Kodavati Veera & Satya Devi Kodavati,2,2021,2021,1,259400.0,129700.0,14.9358,0,True
+Marine Properties and Investments Inc.,2,2023,2023,1,248201.0,124100.5,53.6254,0,True
+Yvonne M. Green,2,2019,2020,2,240200.0,120100.0,10.2847,0,True
+Mark Rouse,2,2020,2020,1,175900.0,87950.0,9.4092,0,True
+Sea Chan & Yilan Chan,2,2020,2020,1,112088.0,56044.0,10.3533,0,True
+Donald & Cindy L. Boose,2,2024,2024,1,100392.0,50196.0,18.969,0,True
+Great Market LLC,2,2019,2023,2,66101.0,33050.5,4.0876,0,True
+Gregory Wold,2,2019,2023,2,53195.0,26597.5,7.1464,0,True
+"West Central Land, LLC",2,2020,2020,1,51383.0,25691.5,1.837,0,True
+Caleb M. Reid & Ashley B. Trino,2,2021,2021,1,35501.0,17750.5,5.1994,0,True
+Liam James Coughlan,2,2023,2023,1,30800.0,15400.0,3.849,0,True
+Sky Boulom & Jeudi T. Boulom,2,2019,2019,1,17101.0,8550.5,4.7462,0,True
+Rebecca S. Davis & Bruce T. Davis,2,2019,2019,1,5102.0,2551.0,1.2075,0,True
+Qi Zhang,1,2024,2024,1,599700.0,599700.0,20.8512,0,False
+Satnam Hayer,1,2022,2022,1,544100.0,544100.0,27.7277,0,False
+Kingsport Plaza LLC,1,2024,2024,1,512100.0,512100.0,13.519,0,False
+NPS Oz LLC,1,2023,2023,1,429201.0,429201.0,16.7011,0,False
+Baber Mohammad,1,2023,2023,1,390700.0,390700.0,15.3952,0,False
+Cameron Retzlaff / Helaina Retzlaff,1,2025,2025,1,380400.0,380400.0,19.6915,0,False
+Sia H. Ung,1,2021,2021,1,351700.0,351700.0,19.0098,0,False
+Lakshmana & Bhuvaneswari Nallamothu,1,2023,2023,1,345301.0,345301.0,15.2491,0,False
+Christopher Orogvany / Mesina Orogvany,1,2025,2025,1,311411.75,311411.75,15.6112,0,False
+BGR Properties LLC,1,2020,2020,1,255300.0,255300.0,14.5487,0,False
+Vera V. Semenyuk,1,2021,2021,1,240600.0,240600.0,16.4378,0,False
+Avelina M. Semenyuk,1,2022,2022,1,221900.0,221900.0,17.0745,0,False
+Gurdip Singh,1,2024,2024,1,195300.0,195300.0,17.8258,0,False
+Peque Investments LLC,1,2024,2024,1,175900.0,175900.0,14.6327,0,False
+Michael Cheung & Maggie Huynh,1,2019,2019,1,169100.0,169100.0,7.4108,0,False
+Yesenia Aguirre & Ricardo Garcia Diaz,1,2023,2023,1,147000.0,147000.0,12.404,0,False
+Ramesh Chundru / Srilakshmi Medepalli,1,2025,2025,1,140700.0,140700.0,16.6765,0,False
+Tri Valley Commercial,1,2022,2022,1,127100.0,127100.0,16.3768,0,False
+Secured Holdings LLC,1,2024,2024,1,125666.0,125666.0,14.9549,0,False
+"Beverly West Capital, Inc.",1,2022,2022,1,119800.0,119800.0,34.4154,0,False
+Mark John William Gore & Sherri Lynn Postnikoff,1,2024,2024,1,111111.0,111111.0,9.185,0,False
+Brian T. Ruble,1,2025,2025,1,93300.0,93300.0,13.9212,0,False
+Derrick Boyer,1,2024,2024,1,85301.0,85301.0,22.237,0,False
+KS Investment Trust,1,2022,2022,1,80100.0,80100.0,9.2324,0,False
+Jonathan E. Schillios & Mari A. Peterson Schillios,1,2022,2022,1,77100.0,77100.0,13.0944,0,False
+Robert Howard,1,2022,2022,1,73500.0,73500.0,29.4944,0,False
+Dominic and Erin Ivankovich,1,2024,2024,1,50100.0,50100.0,11.0498,0,False
+Randal A. Wheeler,1,2019,2019,1,48800.0,48800.0,9.6044,0,False
+Justin P. Suszynsky,1,2019,2019,1,47100.0,47100.0,6.7113,0,False
+Anthony R. Lane & MarJae Lane,1,2024,2024,1,44100.0,44100.0,12.1555,0,False
+Sky Boulom and Jeudi Boulom,1,2024,2024,1,40300.0,40300.0,11.3842,0,False
+Stephen G. Ladd,1,2019,2019,1,33700.0,33700.0,7.2802,0,False
+Adam Weintraub,1,2024,2024,1,33100.0,33100.0,11.19,0,False
+Venkata S. M. Kodavati Veera & Satya D. Kodavati,1,2020,2020,1,30988.0,30988.0,13.1808,0,False
+Grant G. Korzetz,1,2019,2019,1,26700.0,26700.0,7.2673,0,False
+Ricky & Ladora DeFrancesco,1,2023,2023,1,24501.0,24501.0,8.2662,0,False
+De Ann McClung,1,2019,2019,1,20600.0,20600.0,9.6987,0,False
+Brad J. Johnsen,1,2024,2024,1,20100.0,20100.0,7.0975,0,False
+Patrick Hutchison & Bryan Schatz,1,2020,2020,1,18600.0,18600.0,9.0555,0,False
+Irene Chang,1,2021,2021,1,17000.0,17000.0,6.5511,0,False
+John Bartlett,1,2024,2024,1,15800.0,15800.0,4.9545,0,False
+Solomon Potter,1,2024,2024,1,15100.0,15100.0,4.8074,0,False
+Aaron J. Rich & Kyle C. Rich,1,2020,2020,1,14160.0,14160.0,4.4655,0,False
+Samuel John Boyce & Alana Elizabeth Chapko,1,2021,2021,1,13400.0,13400.0,6.2529,0,False
+Taylor Lightfoot,1,2021,2021,1,13300.0,13300.0,6.4626,0,False
+Kaitlyn & Matt Schrank,1,2023,2023,1,12600.0,12600.0,4.3599,0,False
+Galina Kakhaia,1,2020,2020,1,12000.0,12000.0,5.3215,0,False
+"Mio Metals, Inc.",1,2020,2020,1,10550.0,10550.0,5.2357,0,False
+Misael Avila,1,2023,2023,1,10100.0,10100.0,4.2815,0,False
+George J. Barlet,1,2019,2019,1,10001.0,10001.0,4.9955,0,False
+Juvenal Antonio Cruz & Rosita Yesenia Cruz,1,2019,2019,1,10000.0,10000.0,5.1733,0,False
+Hevel J. Fernandez Ruiz & Lan K. Nguyen,1,2022,2022,1,9700.0,9700.0,3.9271,0,False
+Daniel Lytton,1,2023,2023,1,6724.0,6724.0,1.0,0,False
+Damon J. Barnett & Ann M. Barnett,1,2019,2019,1,6500.0,6500.0,2.9465,0,False
+TommyTQL LLC,1,2019,2019,1,5700.0,5700.0,2.7724,0,False
+Uriel Favela,1,2019,2019,1,5700.0,5700.0,2.6279,0,False
+Sha Liu & Zhong Chen,1,2020,2020,1,5655.0,5655.0,2.7761,0,False
+Bell Family Land Holdings,1,2019,2019,1,5600.0,5600.0,2.2436,0,False
+Alvin Wong,1,2020,2020,1,5200.0,5200.0,2.3744,0,False
+Jonathan Schillios,1,2020,2020,1,4990.0,4990.0,2.2785,0,False
+DD Build EPSP 401K / John Davidson TTEE,1,2020,2020,1,4910.0,4910.0,2.242,0,False
+"The Eckartlove Trust—Kathleen Eckartlove & Lory Eckartlove, Co-Trustees",1,2020,2020,1,4800.0,4800.0,2.3622,0,False
+Antench Kitila,1,2019,2019,1,4600.0,4600.0,2.4705,0,False
+Willamette Development Group LLC,1,2022,2022,1,4500.0,4500.0,1.8109,0,False
+Liam Coughlan,1,2020,2020,1,4381.0,4381.0,2.1052,0,False
+Cyril P. Hery,1,2020,2020,1,4322.0,4322.0,2.1343,0,False
+Arturo Anguiano & Jason P. Blevins,1,2019,2019,1,3200.0,3200.0,1.5451,0,False
+Alexander W. Schmid,1,2023,2023,1,3181.0,3181.0,1.336,0,False
+Amber Maddalena,1,2020,2020,1,3100.0,3100.0,1.4762,0,False
+Lucas Debari & Mallory Sullivan,1,2020,2020,1,3077.0,3077.0,1.0,0,False
+Kevin McLaughlin,1,2023,2023,1,2602.0,2602.0,1.04,0,False
+Stephanie L. Pahlow & Jon N. Dalberg,1,2019,2019,1,2454.0,2454.0,1.0,0,False
+Bell Investments,1,2019,2019,1,2385.0,2385.0,1.0438,0,False
+Snohomish County as Tax Title,1,2023,2023,1,2050.06,2050.06,0.9035,1,False
+Susan Wilkins,1,2019,2019,1,1522.0,1522.0,1.0,0,False

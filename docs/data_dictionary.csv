@@ -1,0 +1,65 @@
+﻿field_name,data_type,source_family,description,release_tier
+auction_sale_id,string,Derived,Unique auction year + sale number identifier,Public
+parcel_year_id,string,Derived,Parcel-year identifier for lifecycle joins,Public
+parcel_number,string,County records,14-digit Snohomish County parcel identifier,Public
+auction_year,integer,County records,Year assigned to the tax foreclosure auction,Public
+sale_number,integer,Return of Sale,County sale-list sequence number,Public
+court_case_number,string,Court filing,Superior Court foreclosure case number,Public
+certificate_listed_flag,boolean,Certificate of Delinquency,Parcel appeared in initial foreclosure filing,Public
+publication_listed_flag,boolean,Affidavit of Publication,Parcel appeared in published notice,Public
+final_order_flag,boolean,Final Order of Sale,Parcel remained subject to sale at final order,Public
+sold_flag,boolean,Return of Sale,Parcel sold or was acquired by county,Public
+redeemed_or_paid_flag,boolean,County filings,Taxes resolved before sale,Public
+administratively_pulled_flag,boolean,County filings,Parcel removed administratively,Public
+county_acquired_flag,boolean,Return of Sale,Snohomish County took tax title,Public
+amount_due,decimal,Certificate/final order,"Delinquent taxes, interest, and costs reported",Public
+minimum_bid,decimal,Return of Sale,Opening/minimum auction bid,Public
+selling_price,decimal,Return of Sale,Winning bid or county acquisition amount,Public
+bid_multiple,decimal,Derived,Selling price divided by minimum bid,Public
+winning_bid_premium,decimal,Derived,Selling price minus minimum bid,Public
+excess_funds,decimal,Excess Funds List,Reported sale surplus after claims/costs,Public
+buyer_name,string,Return of Sale,Purchaser name printed in county exhibit,Public
+taxpayer_name,string,Foreclosure filings,Taxpayer named in filing,Public
+record_title_holder_names,string,Foreclosure filings,Owners/parties of interest printed in filing,Public
+situs_address,string,Assessor/filing,Property situs address,Public
+city,string,Derived/assessor,Normalized locality,Public
+use_code,string,Assessor/filing,County property use code,Public
+use_description,string,Assessor/filing,County use-code description,Public
+property_category,string,Derived,"Normalized category such as SFR, condo, vacant land, recreational",Public
+acreage,decimal,Assessor/filing,Recorded parcel area in acres,Public
+land_value,decimal,Assessor/filing,Assessed land value at source date,Public
+improvement_value,decimal,Assessor/filing,Assessed improvement value at source date,Public
+total_assessed_value,decimal,Derived,Land plus improvement assessed value,Public
+year_built,integer,Assessor,Primary improvement construction year,Public
+building_sqft,decimal,Assessor,Primary building square footage,Public
+bedrooms,decimal,Assessor,Reported bedroom count when available,Public
+bathrooms,decimal,Assessor,Reported bathroom count when available,Public
+zoning_code,string,County/city GIS,Current zoning designation,Public
+future_land_use,string,Planning GIS,Comprehensive-plan future land-use designation,Public
+incorporated_flag,boolean,GIS,Parcel lies in incorporated city,Public
+urban_growth_area_flag,boolean,GIS,Parcel lies in urban growth area,Public
+fema_flood_zone,string,FEMA NFHL,Primary FEMA flood-zone designation,Public
+floodway_overlap_pct,decimal,Derived GIS,Percentage of parcel intersecting regulatory floodway,Public
+wetland_overlap_pct,decimal,Derived GIS,Percentage intersecting mapped wetlands,Public
+stream_buffer_overlap_pct,decimal,Derived GIS,Percentage intersecting mapped stream buffers,Public
+steep_slope_overlap_pct,decimal,Derived GIS,Percentage intersecting steep-slope/geologic hazard layer,Public
+shoreline_jurisdiction_flag,boolean,Planning GIS,Parcel intersects shoreline jurisdiction,Public
+public_road_frontage_flag,boolean,GIS/manual,Parcel appears to front a public road,Public
+landlocked_risk_flag,boolean,Derived/manual,Potential access issue requiring title review,Public
+water_service_area,string,Utility GIS,Water provider/service area,Public
+sewer_service_area,string,Utility GIS,Sewer provider/service area,Public
+septic_record_flag,boolean,Health/permit records,Septic-related record located,Public
+no_perk_flag,boolean,Assessor/filing,County use description indicates no-perk land,Public
+building_permit_count,integer,Permit records,Number of located building permits,Public
+demolition_permit_flag,boolean,Permit records,Demolition permit located,Public
+code_enforcement_flag,boolean,County/city records,Relevant code-enforcement record located,Public
+prior_sale_date,date,Assessor/recorder,Most recent prior arm's-length sale date where identifiable,Public
+prior_sale_price,decimal,Assessor/recorder,Most recent prior sale consideration,Public
+latitude,decimal,GIS,Representative parcel latitude,Public
+longitude,decimal,GIS,Representative parcel longitude,Public
+parcel_area_sqft,decimal,GIS,Calculated parcel area,Public
+source_document_ids,string,Source manifest,Delimited list of supporting source IDs,Public
+source_page_refs,string,Source documents,Page or exhibit references used,Public
+extraction_method,string,Pipeline,"Parsed text, table extraction, OCR, or manual transcription",Public
+review_status,string,Pipeline,"Unreviewed, machine-checked, manually-verified, exception",Public
+quality_notes,string,Pipeline,Known ambiguity or data-quality issue,Public
