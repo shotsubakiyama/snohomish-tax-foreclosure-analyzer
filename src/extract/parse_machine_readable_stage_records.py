@@ -1,16 +1,17 @@
-"""Parse machine-readable Snohomish foreclosure-stage PDFs.
+"""Parse searchable Snohomish foreclosure-stage PDFs, including page-spanning records.
 
-The parser is intentionally conservative:
-- it only parses pages with extracted text;
-- it preserves raw source text;
-- it records source filename/page;
-- it routes uncertain records to review rather than inventing values.
+Version 2 improvements:
+- concatenates all searchable pages before splitting records;
+- preserves starting and ending page numbers;
+- captures multi-line fields up to the next known label;
+- reduces false review flags caused by PDF page breaks.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
+import bisect
 import re
 from typing import Iterable
 
@@ -22,62 +23,37 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
 OUTPUT_DIR = PROJECT_ROOT / "outputs" / "public"
 
-
-PARCEL_RE = re.compile(r"(?im)^\s*(?:APN:|PARCEL\s*#?|#)?\s*(\d{14})\b")
-SALE_NUMBER_RE = re.compile(r"(?im)^\s*#\s*(\d{1,4})\s+(\d{14})\b")
 YEAR_RE = re.compile(r"\b(20(?:19|2[0-9]))\b")
-MONEY_RE = re.compile(r"\$?\s*([\d,]+(?:\.\d{1,2})?)")
-NUMBER_RE = re.compile(r"([\d.]+)")
+RECORD_ANCHOR_RE = re.compile(
+    r"(?im)^\s*(?:#\s*(\d{1,4})\s+|APN:\s*)?(\d{14})\b"
+)
 
+FIELD_LABELS = [
+    "Taxpayer",
+    "TAXPAYER/ASCEND OWNER/RECORD TITLE HOLDER/LIENHOLDER",
+    "TAXPAYER/OWNER/RECORD TITLE HOLDER/LIENHOLDERS",
+    "Owner/Record Title Holder/Other Parties of Interest",
+    "Legal",
+    "LEGAL",
+    "Situs/local street address if known",
+    "Situs",
+    "TCA",
+    "Use Code",
+    "Size (acres)",
+    "Size",
+    "Land Value",
+    "Improvement Value",
+    "Tax Years",
+    "TAX YEARS",
+    "Amount due",
+    "AMOUNT DUE",
+    "Amount paid",
+    "AMOUNT PAID",
+]
 
-FIELD_PATTERNS = {
-    "taxpayer_name": [
-        re.compile(r"(?im)^\s*Taxpayer:\s*(.+)$"),
-        re.compile(r"(?im)^\s*TAXPAYER/ASCEND OWNER/RECORD TITLE HOLDER/LIENHOLDER:\s*(.+)$"),
-    ],
-    "owner_record_text": [
-        re.compile(r"(?im)^\s*Owner/Record Title Holder/Other Parties of Interest:\s*(.+)$"),
-        re.compile(r"(?im)^\s*TAXPAYER/OWNER/RECORD TITLE HOLDER/LIENHOLDERS:\s*(.+)$"),
-    ],
-    "legal_description": [
-        re.compile(r"(?im)^\s*Legal:\s*(.+)$"),
-        re.compile(r"(?im)^\s*LEGAL:\s*(.+)$"),
-    ],
-    "situs_address": [
-        re.compile(r"(?im)^\s*Situs/local street address if known:\s*(.+)$"),
-        re.compile(r"(?im)^\s*Situs:\s*(.+)$"),
-    ],
-    "use_code": [
-        re.compile(r"(?im)^\s*Use Code:\s*([A-Za-z0-9.-]+)"),
-        re.compile(r"(?im)^\s*TCA:\s*([A-Za-z0-9.-]+)"),
-    ],
-    "use_description": [
-        re.compile(r"(?im)^\s*Use Code:\s*[A-Za-z0-9.-]+\s+(.+)$"),
-        re.compile(r"(?im)^\s*TCA:\s*[A-Za-z0-9.-]+\s+Use Code:\s*[A-Za-z0-9.-]+\s+(.+)$"),
-    ],
-    "acreage": [
-        re.compile(r"(?im)^\s*Size \(acres\):\s*([\d.]+)"),
-        re.compile(r"(?im)^\s*Size:\s*([\d.]+)\s*Acres"),
-    ],
-    "land_value": [
-        re.compile(r"(?im)^\s*Land Value:\s*\$?\s*([\d,]+(?:\.\d{1,2})?)"),
-    ],
-    "improvement_value": [
-        re.compile(r"(?im)^\s*Improvement Value:\s*\$?\s*([\d,]+(?:\.\d{1,2})?)"),
-    ],
-    "tax_years": [
-        re.compile(r"(?im)^\s*TAX YEARS:\s*(.+)$"),
-        re.compile(r"(?im)^\s*Tax Years:\s*(.+)$"),
-    ],
-    "amount_due": [
-        re.compile(r"(?im)^\s*AMOUNT DUE.*?:\s*\$?\s*([\d,]+(?:\.\d{1,2})?)"),
-        re.compile(r"(?im)^\s*Amount due.*?:\s*\$?\s*([\d,]+(?:\.\d{1,2})?)"),
-    ],
-    "amount_paid": [
-        re.compile(r"(?im)^\s*AMOUNT PAID.*?:\s*\$?\s*([\d,]+(?:\.\d{1,2})?)"),
-        re.compile(r"(?im)^\s*Amount paid.*?:\s*\$?\s*([\d,]+(?:\.\d{1,2})?)"),
-    ],
-}
+NEXT_LABEL_PATTERN = "|".join(
+    sorted((re.escape(label) for label in FIELD_LABELS), key=len, reverse=True)
+)
 
 
 STATUS_PATTERNS = {
@@ -90,7 +66,7 @@ STATUS_PATTERNS = {
         r"\bMUST BE SOLD WITH\b", re.IGNORECASE
     ),
     "sale_does_not_include_flag": re.compile(
-        r"\bSALE DOES NOT INCLUDE\b", re.IGNORECASE
+        r"\b(?:SALE\s+)?DOES NOT INCLUDE\b", re.IGNORECASE
     ),
     "subject_to_flag": re.compile(r"\bSUBJECT TO\b", re.IGNORECASE),
 }
@@ -106,6 +82,7 @@ class ParsedStageRecord:
     owner_record_text: str | None
     legal_description: str | None
     situs_address: str | None
+    tca_code: str | None
     use_code: str | None
     use_description: str | None
     acreage: float | None
@@ -122,7 +99,8 @@ class ParsedStageRecord:
     subject_to_flag: bool
     special_condition_text: str | None
     source_filename: str
-    source_page: int
+    source_start_page: int
+    source_end_page: int
     source_relative_path: str
     raw_record_text: str
     extraction_method: str
@@ -130,70 +108,97 @@ class ParsedStageRecord:
     review_reason: str
 
 
-def clean_text(value: str | None) -> str | None:
+def normalize(value: str | None) -> str | None:
     if value is None:
         return None
-    value = re.sub(r"\s+", " ", value).strip()
+    value = re.sub(r"\s+", " ", value).strip(" \t\r\n:;-")
     return value or None
 
 
-def money_to_float(value: str | None) -> float | None:
+def money(value: str | None) -> float | None:
     if not value:
         return None
-    try:
-        return float(value.replace(",", "").replace("$", "").strip())
-    except ValueError:
+    match = re.search(r"([\d,]+(?:\.\d{1,2})?)", value)
+    if not match:
         return None
+    return float(match.group(1).replace(",", ""))
 
 
-def first_match(text: str, patterns: Iterable[re.Pattern]) -> str | None:
-    for pattern in patterns:
-        match = pattern.search(text)
-        if match:
-            return clean_text(match.group(1))
-    return None
+def number(value: str | None) -> float | None:
+    if not value:
+        return None
+    match = re.search(r"([\d.]+)", value)
+    return float(match.group(1)) if match else None
 
 
-def infer_year(filename: str, text: str) -> int | None:
+def field_between(text: str, labels: Iterable[str]) -> str | None:
+    label_pattern = "|".join(
+        sorted((re.escape(label) for label in labels), key=len, reverse=True)
+    )
+    pattern = re.compile(
+        rf"(?is)(?:^|\n)\s*(?:{label_pattern})\s*:\s*(.*?)"
+        rf"(?=\n\s*(?:{NEXT_LABEL_PATTERN})\s*:|\Z)"
+    )
+    match = pattern.search(text)
+    return normalize(match.group(1)) if match else None
+
+
+def first_line_value(text: str, labels: Iterable[str]) -> str | None:
+    label_pattern = "|".join(
+        sorted((re.escape(label) for label in labels), key=len, reverse=True)
+    )
+    pattern = re.compile(rf"(?im)^\s*(?:{label_pattern})\s*:\s*(.+)$")
+    match = pattern.search(text)
+    return normalize(match.group(1)) if match else None
+
+
+def infer_year(filename: str, document_text: str) -> int | None:
     filename_match = YEAR_RE.search(filename)
     if filename_match:
         return int(filename_match.group(1))
 
-    # Prefer court/certificate years near the beginning of the document.
-    early = text[:3000]
-    years = [int(x) for x in YEAR_RE.findall(early)]
-    if years:
-        return max(years)
-    return None
+    years = [int(x) for x in YEAR_RE.findall(document_text[:5000])]
+    return max(years) if years else None
 
 
-def split_page_into_records(text: str) -> list[tuple[int | None, str, str]]:
-    """Return tuples of (sale/property number, parcel number, record text)."""
-    anchors: list[tuple[int, int | None, str]] = []
+def build_document_text(pdf: pdfplumber.PDF) -> tuple[str, list[int], list[int]]:
+    """Return text, page start offsets, and page numbers for searchable pages."""
+    parts: list[str] = []
+    starts: list[int] = []
+    page_numbers: list[int] = []
+    current = 0
 
-    for match in SALE_NUMBER_RE.finditer(text):
-        anchors.append((match.start(), int(match.group(1)), match.group(2)))
+    for page_number, page in enumerate(pdf.pages, start=1):
+        page_text = page.extract_text() or ""
+        if not page_text.strip():
+            continue
 
-    # Fallback for APN-led records where there is no explicit # sequence.
-    if not anchors:
-        for match in PARCEL_RE.finditer(text):
-            anchors.append((match.start(), None, match.group(1)))
+        marker = f"\n\n[[SOURCE_PAGE_{page_number}]]\n"
+        chunk = marker + page_text
+        starts.append(current)
+        page_numbers.append(page_number)
+        parts.append(chunk)
+        current += len(chunk)
 
-    if not anchors:
-        return []
+    return "".join(parts), starts, page_numbers
 
-    records: list[tuple[int | None, str, str]] = []
-    for index, (start, sequence, parcel) in enumerate(anchors):
-        end = anchors[index + 1][0] if index + 1 < len(anchors) else len(text)
-        records.append((sequence, parcel, text[start:end].strip()))
-    return records
+
+def page_for_offset(offset: int, page_starts: list[int], page_numbers: list[int]) -> int:
+    index = bisect.bisect_right(page_starts, offset) - 1
+    if index < 0:
+        return page_numbers[0]
+    return page_numbers[index]
+
+
+def remove_page_markers(text: str) -> str:
+    return re.sub(r"\[\[SOURCE_PAGE_\d+\]\]", " ", text)
 
 
 def capture_special_conditions(record_text: str) -> str | None:
-    lines = []
-    for line in record_text.splitlines():
-        normalized = line.strip()
-        upper = normalized.upper()
+    cleaned = remove_page_markers(record_text)
+    lines: list[str] = []
+    for line in cleaned.splitlines():
+        upper = line.upper()
         if any(
             phrase in upper
             for phrase in (
@@ -201,59 +206,123 @@ def capture_special_conditions(record_text: str) -> str | None:
                 "ADMINISTRATIVELY PULLED",
                 "REDEEMED",
                 "MUST BE SOLD WITH",
-                "SALE DOES NOT INCLUDE",
+                "DOES NOT INCLUDE",
                 "SUBJECT TO",
+                "NOTE-",
+                "NOTE:",
             )
         ):
-            lines.append(normalized)
-    return clean_text(" | ".join(lines)) if lines else None
+            lines.append(normalize(line) or "")
+    return normalize(" | ".join(x for x in lines if x))
+
+
+def split_document_records(
+    document_text: str,
+) -> list[tuple[int | None, str, int, int, str]]:
+    anchors = list(RECORD_ANCHOR_RE.finditer(document_text))
+    records: list[tuple[int | None, str, int, int, str]] = []
+
+    for index, anchor in enumerate(anchors):
+        start = anchor.start()
+        end = anchors[index + 1].start() if index + 1 < len(anchors) else len(document_text)
+        sequence = int(anchor.group(1)) if anchor.group(1) else None
+        parcel = anchor.group(2)
+        records.append((sequence, parcel, start, end, document_text[start:end]))
+
+    return records
 
 
 def parse_record(
     *,
-    document_family: str,
+    family: str,
     year: int | None,
     sequence: int | None,
-    parcel_number: str,
+    parcel: str,
+    start_page: int,
+    end_page: int,
     record_text: str,
     source_path: Path,
-    page_number: int,
 ) -> ParsedStageRecord:
-    extracted: dict[str, str | None] = {
-        field: first_match(record_text, patterns)
-        for field, patterns in FIELD_PATTERNS.items()
-    }
+    clean_record = remove_page_markers(record_text)
 
-    review_reasons: list[str] = []
-    if year is None:
-        review_reasons.append("year not inferred")
-    if not extracted["legal_description"]:
-        review_reasons.append("legal description missing")
-    if not extracted["taxpayer_name"] and not extracted["owner_record_text"]:
-        review_reasons.append("owner/taxpayer missing")
+    taxpayer = field_between(
+        clean_record,
+        [
+            "Taxpayer",
+            "TAXPAYER/ASCEND OWNER/RECORD TITLE HOLDER/LIENHOLDER",
+        ],
+    )
+    owner = field_between(
+        clean_record,
+        [
+            "Owner/Record Title Holder/Other Parties of Interest",
+            "TAXPAYER/OWNER/RECORD TITLE HOLDER/LIENHOLDERS",
+        ],
+    )
+    legal = field_between(clean_record, ["Legal", "LEGAL"])
+    situs = field_between(
+        clean_record,
+        ["Situs/local street address if known", "Situs"],
+    )
+
+    tca = first_line_value(clean_record, ["TCA"])
+    use_line = first_line_value(clean_record, ["Use Code"])
+    use_code = None
+    use_description = None
+    if use_line:
+        match = re.match(r"([A-Za-z0-9.-]+)\s*(.*)", use_line)
+        if match:
+            use_code = normalize(match.group(1))
+            use_description = normalize(match.group(2))
+
+    acreage = number(
+        first_line_value(clean_record, ["Size (acres)", "Size"])
+    )
+    land_value = money(first_line_value(clean_record, ["Land Value"]))
+    improvement_value = money(
+        first_line_value(clean_record, ["Improvement Value"])
+    )
+    tax_years = field_between(clean_record, ["Tax Years", "TAX YEARS"])
+    amount_due = money(
+        first_line_value(clean_record, ["Amount due", "AMOUNT DUE"])
+    )
+    amount_paid = money(
+        first_line_value(clean_record, ["Amount paid", "AMOUNT PAID"])
+    )
 
     flags = {
-        name: bool(pattern.search(record_text))
+        name: bool(pattern.search(clean_record))
         for name, pattern in STATUS_PATTERNS.items()
     }
 
+    reasons: list[str] = []
+    if year is None:
+        reasons.append("year not inferred")
+    if not legal:
+        reasons.append("legal description missing")
+    if not taxpayer and not owner:
+        reasons.append("owner/taxpayer missing")
+    if start_page != end_page:
+        reasons.append("record spans pages; verify page join")
+
     return ParsedStageRecord(
-        document_family=document_family,
+        document_family=family,
         inferred_year=year,
         sale_or_property_number=sequence,
-        parcel_number=parcel_number.zfill(14),
-        taxpayer_name=extracted["taxpayer_name"],
-        owner_record_text=extracted["owner_record_text"],
-        legal_description=extracted["legal_description"],
-        situs_address=extracted["situs_address"],
-        use_code=extracted["use_code"],
-        use_description=extracted["use_description"],
-        acreage=float(extracted["acreage"]) if extracted["acreage"] else None,
-        land_value=money_to_float(extracted["land_value"]),
-        improvement_value=money_to_float(extracted["improvement_value"]),
-        tax_years=extracted["tax_years"],
-        amount_due=money_to_float(extracted["amount_due"]),
-        amount_paid=money_to_float(extracted["amount_paid"]),
+        parcel_number=parcel.zfill(14),
+        taxpayer_name=taxpayer,
+        owner_record_text=owner,
+        legal_description=legal,
+        situs_address=situs,
+        tca_code=tca,
+        use_code=use_code,
+        use_description=use_description,
+        acreage=acreage,
+        land_value=land_value,
+        improvement_value=improvement_value,
+        tax_years=tax_years,
+        amount_due=amount_due,
+        amount_paid=amount_paid,
         paid_in_full_flag=flags["paid_in_full_flag"],
         administratively_pulled_flag=flags[
             "administratively_pulled_flag"
@@ -264,64 +333,54 @@ def parse_record(
             "sale_does_not_include_flag"
         ],
         subject_to_flag=flags["subject_to_flag"],
-        special_condition_text=capture_special_conditions(record_text),
+        special_condition_text=capture_special_conditions(clean_record),
         source_filename=source_path.name,
-        source_page=page_number,
+        source_start_page=start_page,
+        source_end_page=end_page,
         source_relative_path=source_path.relative_to(PROJECT_ROOT).as_posix(),
-        raw_record_text=clean_text(record_text) or "",
-        extraction_method="pdf_text_regex",
-        review_required_flag=bool(review_reasons),
-        review_reason="; ".join(review_reasons),
+        raw_record_text=normalize(clean_record) or "",
+        extraction_method="pdf_text_document_regex_v2",
+        review_required_flag=bool(reasons),
+        review_reason="; ".join(reasons),
     )
 
 
 def parse_pdf(path: Path) -> list[ParsedStageRecord]:
-    family = path.parent.name
+    with pdfplumber.open(path) as pdf:
+        document_text, page_starts, page_numbers = build_document_text(pdf)
+
+    if not document_text.strip():
+        return []
+
+    year = infer_year(path.name, document_text)
     records: list[ParsedStageRecord] = []
 
-    with pdfplumber.open(path) as pdf:
-        document_text_parts: list[str] = []
-        page_texts: list[str] = []
-
-        for page in pdf.pages:
-            page_text = page.extract_text() or ""
-            page_texts.append(page_text)
-            if page_text.strip():
-                document_text_parts.append(page_text)
-
-        document_text = "\n".join(document_text_parts)
-        year = infer_year(path.name, document_text)
-
-        for page_index, page_text in enumerate(page_texts, start=1):
-            if not page_text.strip():
-                continue
-
-            for sequence, parcel, record_text in split_page_into_records(page_text):
-                records.append(
-                    parse_record(
-                        document_family=family,
-                        year=year,
-                        sequence=sequence,
-                        parcel_number=parcel,
-                        record_text=record_text,
-                        source_path=path,
-                        page_number=page_index,
-                    )
-                )
+    for sequence, parcel, start, end, record_text in split_document_records(
+        document_text
+    ):
+        records.append(
+            parse_record(
+                family=path.parent.name,
+                year=year,
+                sequence=sequence,
+                parcel=parcel,
+                start_page=page_for_offset(start, page_starts, page_numbers),
+                end_page=page_for_offset(max(start, end - 1), page_starts, page_numbers),
+                record_text=record_text,
+                source_path=path,
+            )
+        )
 
     return records
 
 
 def main() -> None:
-    candidate_families = {"certificates", "affidavits", "final_orders"}
+    families = {"certificates", "affidavits", "final_orders"}
     paths = sorted(
         path
-        for family in candidate_families
+        for family in families
         for path in (RAW_DIR / family).glob("*.pdf")
     )
-
-    if not paths:
-        raise FileNotFoundError("No candidate PDFs found.")
 
     parsed: list[ParsedStageRecord] = []
     file_stats: list[dict] = []
@@ -363,6 +422,11 @@ def main() -> None:
         ).reset_index(drop=True)
 
     stats_df = pd.DataFrame(file_stats)
+    review_df = (
+        records_df[records_df["review_required_flag"]].copy()
+        if not records_df.empty
+        else records_df.copy()
+    )
 
     records_df.to_csv(
         OUTPUT_DIR / "machine_readable_stage_records.csv",
@@ -371,12 +435,6 @@ def main() -> None:
     stats_df.to_csv(
         OUTPUT_DIR / "machine_readable_stage_file_summary.csv",
         index=False,
-    )
-
-    review_df = (
-        records_df[records_df["review_required_flag"]]
-        if not records_df.empty
-        else records_df
     )
     review_df.to_csv(
         OUTPUT_DIR / "machine_readable_stage_review_queue.csv",
@@ -408,14 +466,29 @@ def main() -> None:
                 )
                 worksheet.column_dimensions[cells[0].column_letter].width = width
 
+    missing_legal = (
+        int(records_df["legal_description"].isna().sum())
+        if not records_df.empty
+        else 0
+    )
+    missing_owner = (
+        int(
+            (
+                records_df["taxpayer_name"].isna()
+                & records_df["owner_record_text"].isna()
+            ).sum()
+        )
+        if not records_df.empty
+        else 0
+    )
+
     print(f"Candidate PDFs scanned: {len(paths):,}")
     print(f"Parsed stage records: {len(records_df):,}")
     print(f"Files yielding records: {(stats_df['parsed_record_count'] > 0).sum():,}")
     print(f"Review-queue records: {len(review_df):,}")
-    print(
-        "Output:",
-        OUTPUT_DIR / "machine_readable_stage_records.xlsx",
-    )
+    print(f"Records missing legal description: {missing_legal:,}")
+    print(f"Records missing owner/taxpayer: {missing_owner:,}")
+    print("Parser version: document-wide v2")
 
 
 if __name__ == "__main__":
