@@ -3,4 +3,9 @@ data/private/
 outputs/private/
 .env
 __pycache__/
-*.pyc
+*.pycdata/private/
+outputs/
+*.bak
+data/private/
+outputs/
+*.bak
