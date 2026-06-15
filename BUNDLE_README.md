@@ -1,12 +1,11 @@
-# Report draft bundle
+# README bundle
 
-Copy into the repository root.
+Copy `README.md` into the repository root, replacing the current README.
 
-Adds:
+Then run:
 
-```text
-docs/report_draft.md
+```powershell
+git add README.md
+git commit -m "Update README with project report summary"
+git push
 ```
-
-This is a long-form report draft that can later be shortened into the GitHub
-README.
