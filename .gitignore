@@ -1,11 +1,8 @@
 data/raw/
 data/private/
 outputs/private/
+outputs/
 .env
 __pycache__/
-*.pycdata/private/
-outputs/
-*.bak
-data/private/
-outputs/
+*.pyc
 *.bak
