@@ -1,6 +1,6 @@
 """Build report-ready static charts for the Snohomish foreclosure analysis.
 
-Outputs PNG files to docs/assets and a reusable markdown snippet to docs.
+Outputs the report charts used by the public README to docs/assets.
 """
 
 from __future__ import annotations
@@ -100,6 +100,10 @@ def build_bid_multiple_trend() -> None:
             ha="center",
             fontsize=8,
         )
+
+    handles1, labels1 = ax1.get_legend_handles_labels()
+    handles2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(handles1 + handles2, labels1 + labels2, loc="upper left")
 
     ax1.grid(True, axis="y", alpha=0.25)
     ax1.figtext(
