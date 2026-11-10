@@ -9,6 +9,15 @@ A point-in-time public-data project that reconstructs how properties move throug
 
 The counts above describe the records currently loaded into this project. Coverage differs by source and year, so they should not be read as complete counts for every stage across the full period.
 
+## Questions this dataset helps answer
+
+The linked lifecycle data makes it possible to ask questions that are difficult to answer from any one county document alone:
+
+- How many parcels appear at each recorded foreclosure stage, and where do they drop out of the process?
+- How far above the listed minimum bid do confirmed auction sales actually close?
+- How concentrated is repeat-buyer participation across confirmed sales?
+- Where do source coverage gaps or OCR uncertainty limit what can be concluded?
+
 ---
 
 ## What this project does
