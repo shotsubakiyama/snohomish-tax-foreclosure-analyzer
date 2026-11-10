@@ -39,6 +39,8 @@ At a high level, each document represents a different point in the process:
 | **Return of Sale** | The post-auction record showing which properties sold, the winning amount, and the purchaser. |
 | **Excess Funds** | Surplus sale proceeds above the taxes, interest, penalties, and foreclosure costs owed, when applicable. |
 
+These are intentionally plain-English descriptions; Snohomish County's [Tax Foreclosures page](https://snohomishcountywa.gov/220/Tax-Foreclosures) is the authoritative source for the current legal process.
+
 The result is a reusable dataset for studying how properties move through the process, how many actually reach sale, and how auction outcomes compare with the minimum bids listed in foreclosure records.
 
 ---
