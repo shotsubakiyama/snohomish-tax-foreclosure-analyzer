@@ -29,6 +29,16 @@ Return of Sale
 Excess Funds, where available
 ```
 
+At a high level, each document represents a different point in the process:
+
+| Stage | What it means |
+|---|---|
+| **Certificate of Delinquency** | The county files the delinquency action listing properties entering the foreclosure process. |
+| **Affidavit of Publication** | Evidence that foreclosure notice was published; it provides a later snapshot of properties still at risk at that point. |
+| **Final Order of Sale** | The court authorizes the sale and establishes the properties moving to auction. |
+| **Return of Sale** | The post-auction record showing which properties sold, the winning amount, and the purchaser. |
+| **Excess Funds** | Surplus sale proceeds above the taxes, interest, penalties, and foreclosure costs owed, when applicable. |
+
 The result is a reusable dataset for studying how properties move through the process, how many actually reach sale, and how auction outcomes compare with the minimum bids listed in foreclosure records.
 
 ---
@@ -94,15 +104,17 @@ Coverage is strongest for confirmed sales and final orders. Publication coverage
 
 For the 124 confirmed sales in the current dataset, winning prices often moved well above the listed minimum bid. The size of that gap also varies substantially by year and property.
 
-![Median winning bid multiple by year](docs/assets/median_bid_multiple_by_year.png)
+![Winning prices versus minimum bids, with yearly sale volume](docs/assets/bid_multiple_and_sales_volume.svg)
+
+The line is **winning price ÷ minimum bid**. A value of **4×**, for example, means the median property that year sold for four times its listed minimum bid. The bars show the number of confirmed sales behind each year's median so the sample size is visible alongside the result.
 
 The project records both the dollar premium above minimum bid and the sale-price-to-minimum-bid multiple so the relationship can be analyzed directly.
 
 ### 3. Repeat participation exists, but most buyer records are one-offs
 
-The Return of Sale records include both one-time purchasers and buyers who appear more than once. The repository preserves this information for analysis while also generating a public-safe repeat-buyer table with anonymized labels.
+The 124 confirmed sales contain **94 distinct buyer names or buyer groups**. Of those, **19 (20%) appear more than once**. Those repeat buyers account for **49 of the 124 confirmed purchases (40%)**.
 
-I treat repeat participation as a descriptive pattern rather than assuming that every repeat buyer is a professional investor.
+The repository preserves this information for analysis while also generating a public-safe repeat-buyer table with anonymized labels. I treat repeat participation as a descriptive pattern rather than assuming that every repeat buyer is a professional investor; naming variations can also cause the same real-world buyer to appear as separate records.
 
 ---
 
@@ -133,26 +145,7 @@ A few design choices matter:
 - **OCR review flags are preserved** rather than silently treating uncertain extractions as clean data.
 - **Later-stage auction records are not assumed to imply complete earlier-stage coverage.**
 
-The main transformation logic is in [`src/transform/build_unified_lifecycle.py`](src/transform/build_unified_lifecycle.py).
-
----
-
-## Reproduce the project
-
-From the repository root:
-
-```powershell
-python -m src.inventory.build_source_inventory
-python -m src.extract.parse_machine_readable_stage_records
-python -m src.extract.ocr_scanned_final_orders
-python -m src.extract.ocr_scanned_affidavits
-python -m src.transform.build_unified_lifecycle
-python -m src.analysis.build_coverage_audit
-python -m src.analysis.build_analysis_outputs
-python -m src.analysis.build_report_graphs
-```
-
-The OCR steps require Tesseract OCR. Raw public-source PDFs are intentionally not committed to the repository.
+The main transformation logic is in [`src/transform/build_unified_lifecycle.py`](src/transform/build_unified_lifecycle.py). Technical setup and reproduction instructions are kept separately in [`docs/reproducing_the_project.md`](docs/reproducing_the_project.md).
 
 ---
 
