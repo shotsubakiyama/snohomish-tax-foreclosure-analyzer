@@ -61,16 +61,54 @@ def build_bid_multiple_trend() -> None:
     df = pd.read_csv(COMPETITIVENESS)
     df["year"] = prepare_year(df["auction_year"])
 
-    plt.figure(figsize=(10, 5.5))
-    plt.plot(df["year"], df["median_bid_multiple"], marker="o", label="Median bid multiple")
-    plt.title("Median winning bid multiple by year")
-    plt.xlabel("Auction year")
-    plt.ylabel("Selling price / minimum bid")
-    plt.grid(True, alpha=0.3)
-    plt.figtext(
+    fig, ax1 = plt.subplots(figsize=(10, 5.8))
+    ax2 = ax1.twinx()
+
+    positions = range(len(df))
+    ax2.bar(
+        positions,
+        df["sales"],
+        width=0.5,
+        alpha=0.18,
+        label="Confirmed sales",
+    )
+    ax1.plot(
+        positions,
+        df["median_bid_multiple"],
+        marker="o",
+        linewidth=2.2,
+        label="Median winning-price multiple",
+    )
+
+    ax1.set_xticks(list(positions), df["year"])
+    ax1.set_title("Winning prices versus minimum bids, with yearly sale volume")
+    ax1.set_xlabel("Auction year")
+    ax1.set_ylabel("Median winning price / minimum bid (×)")
+    ax2.set_ylabel("Confirmed sales")
+
+    for i, row in df.reset_index(drop=True).iterrows():
+        ax1.annotate(
+            f'{row["median_bid_multiple"]:.1f}×',
+            (i, row["median_bid_multiple"]),
+            textcoords="offset points",
+            xytext=(0, 8),
+            ha="center",
+            fontsize=8,
+        )
+        ax2.annotate(
+            f'n={int(row["sales"])}',
+            (i, row["sales"]),
+            textcoords="offset points",
+            xytext=(0, 4),
+            ha="center",
+            fontsize=8,
+        )
+
+    ax1.grid(True, axis="y", alpha=0.25)
+    ax1.figtext(
         0.01,
         0.01,
-        "Higher values mean winning bids were farther above minimum bid.",
+        "Example: 12× means the median winning price was twelve times the listed minimum bid. Bars show confirmed sales in each year.",
         ha="left",
         fontsize=8,
     )
